@@ -1,0 +1,97 @@
+# Spark + PostgreSQL + HDFS Integration
+
+## 1️⃣ Spark Installation & Configuration
+
+### **Install Spark**
+```bash
+cd /opt
+wget https://dlcdn.apache.org/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz
+tar -xvzf spark-3.5.0-bin-hadoop3.tgz
+mv spark-3.5.0-bin-hadoop3 spark
+```
+
+### **Set Environment Variables**
+Add the following lines to `~/.bashrc` or `~/.profile`:
+```bash
+export SPARK_HOME=/opt/spark
+export PATH=$SPARK_HOME/bin:$PATH
+export PYSPARK_PYTHON=/usr/bin/python3
+```
+Then, apply the changes:
+```bash
+source ~/.bashrc
+```
+
+### **Verify Installation**
+```bash
+spark-shell --version
+```
+
+---
+
+## 2️⃣ PostgreSQL JDBC Setup
+
+### **Check if JDBC Driver Exists**
+```bash
+ls /opt/spark/jars/postgresql-*.jar
+```
+
+### **Download JDBC Driver (If Missing)**
+```bash
+cd /opt/spark/jars
+wget https://jdbc.postgresql.org/download/postgresql-42.6.0.jar
+```
+
+---
+
+## 3️⃣ Load Data from PostgreSQL to HDFS
+
+### **Start PySpark with JDBC Driver**
+```bash
+pyspark --jars /opt/spark/jars/postgresql-42.6.0.jar
+```
+
+### **Run in PySpark**
+```python
+from pyspark.sql import SparkSession
+
+# Initialize Spark Session
+spark = SparkSession.builder.appName("PostgresToHDFS").getOrCreate()
+
+# PostgreSQL connection details
+jdbc_url = "jdbc:postgresql://192.168.56.125:5432/your_database"
+properties = {
+    "user": "your_user",
+    "password": "your_password",
+    "driver": "org.postgresql.Driver"
+}
+
+# Read from PostgreSQL
+df = spark.read.jdbc(url=jdbc_url, table="your_table", properties=properties)
+
+# Show data
+df.show()
+
+# Save to HDFS
+df.write.mode("overwrite").parquet("hdfs://localhost:9000/user/hadoop/postgres_data")
+```
+
+---
+
+## 4️⃣ Verify Data in HDFS
+```bash
+hdfs dfs -ls /user/hadoop/postgres_data
+```
+
+To read the stored data:
+```python
+spark.read.parquet("hdfs://localhost:9000/user/hadoop/postgres_data").show()
+```
+
+---
+
+## 🔥 Next Steps
+- Load data from HDFS to Hive
+- Automate using Airflow
+- Optimize Spark job performance
+
