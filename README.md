@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-=======
+
 # Office Project - Data Engineering Pipeline
 
 ## Project Overview
